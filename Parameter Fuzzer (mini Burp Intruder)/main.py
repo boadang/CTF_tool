@@ -1,6 +1,14 @@
 import requests
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
+# Flow tools:
+# B1: get wordlist
+# B2: Get input from user including URL, param which you want to fuzz, wordlist choice
+# B3: Parsing URL to field partials
+# B4: Finding (key (maybe param which user entered), value) to add into dict
+# B5: Based on the dict created and word list, replacing value by the char or number in word list alternatively.
+#     Merge all of partials become new URL, then, post it to check response (observe this message response to diffirent the change)    
+
 def get_wordlist(choice):
     if choice == "1":  # number
         n = int(input("Max number: "))
@@ -26,8 +34,8 @@ Choose wordlist:
     wordlist = get_wordlist(choice)
 
     # Parse URL
-    parsed = urlparse(url)
-    query_dict = parse_qs(parsed.query)
+    parsed = urlparse(url) # urlparse: divide URL to fields (scheme, netloc, path, query, fragment)
+    query_dict = parse_qs(parsed.query) # parse_qs: convert query string to dict key-value, such as id=123&name=bin -> "id": ["123"],...
 
     if param_to_fuzz not in query_dict:
         print(f"[!] Param '{param_to_fuzz}' not found in URL")
@@ -42,7 +50,7 @@ Choose wordlist:
         # Replace only target param
         query_dict[param_to_fuzz] = [payload]
 
-        new_query = urlencode(query_dict, doseq=True)
+        new_query = urlencode(query_dict, doseq=True) # urlencode: Convert dict to string, doseq=True: allow list convert correctly encode
         new_url = urlunparse((
             parsed.scheme,
             parsed.netloc,
@@ -50,7 +58,7 @@ Choose wordlist:
             parsed.params,
             new_query,
             parsed.fragment
-        ))
+        )) # merge the URL completely parts from the parts which was parsed 
 
         r = requests.get(new_url)
 
